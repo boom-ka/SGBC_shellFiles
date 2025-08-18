@@ -1,0 +1,20 @@
+✅ Usage Examples with CLI flags
+# Use defaults
+./combined_process.sh
+
+# Change just gestational age
+./combined_process.sh -a 32
+
+# Change session and gestational age
+./combined_process.sh -s s2 -a 30
+
+# Change input file too
+./combined_process.sh -s s1 -a 35 -f my_input.nii.gz
+
+# Full custom
+./combined_process.sh -s s2 -a 32 -f my_input.nii.gz -t custom_transform.txt -i SUBJ456
+
+
+This preserves all your original logic and just replaces positional arguments with named options.
+
+If you want, I can also add a help message that prints usage when you run -h. Do you want me to add that?

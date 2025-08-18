@@ -1,0 +1,49 @@
+Here's a script to process all three files in a loop:
+bash#!/bin/bash
+
+# Array of input files and their corresponding output files
+declare -a input_files=("cor.nii.gz" "sag.nii.gz" "ax.nii.gz")
+declare -a output_files=("resam_cor.nii.gz" "resam_sag.nii.gz" "resam_ax.nii.gz")
+
+# Loop through each file
+for i in "${!input_files[@]}"; do
+    input_file="${input_files[$i]}"
+    output_file="${output_files[$i]}"
+    
+    echo "Processing $input_file -> $output_file"
+    
+    ~/Downloads/Slicer-5.8.1-linux-amd64/Slicer --launcher-no-splash --python-code "
+import slicer
+import os
+currentDir = os.getcwd()
+slicer.util.loadVolume(os.path.join(currentDir, '$input_file'))
+inputVolume = slicer.util.getNode('${input_file%.*.*}')
+outputVolume = slicer.vtkMRMLScalarVolumeNode()
+outputVolume.SetName('${output_file%.*.*}')
+slicer.mrmlScene.AddNode(outputVolume)
+parameters = {
+    'InputVolume': inputVolume,
+    'OutputVolume': outputVolume,
+    'outputPixelSpacing': '0.8,0.8,0',
+    'interpolationType': 'lanczos'
+}
+resampleModule = slicer.modules.resamplescalarvolume
+slicer.cli.runSync(resampleModule, None, parameters)
+slicer.util.saveNode(outputVolume, os.path.join(currentDir, '$output_file'))
+slicer.util.quit()
+"
+    
+    echo "Completed processing $input_file"
+    echo "---"
+done
+
+echo "All files processed successfully!"
+Save this as a script file (e.g., batch_resample.sh), make it executable, and run it:
+bash# Save the script
+nano batch_resample.sh
+
+# Make it executable
+chmod +x batch_resample.sh
+
+# Run it
+./batch_resample.sh
