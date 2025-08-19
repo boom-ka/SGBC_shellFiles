@@ -16,24 +16,70 @@ DENOISE_FILE="srr_denoise.nii.gz"
 DECONV_FILE="srr_deconvoluted.nii.gz"
 TRANSFORM_FILE="Untitled.txt"
 
-# Default dHCP parameters
-SUBJECT_ID="FX41"
+# Default session (not required as input)
 SESSION="s1"
-GESTATIONAL_AGE="28"
+
+# Initialize required variables (will be prompted)
+SUBJECT_ID=""
+GESTATIONAL_AGE=""
+
+# ===== Check for sudo access upfront =====
+echo "This script requires sudo access for the dHCP pipeline."
+echo "Please enter your password now to avoid interruption during processing:"
+sudo -v
+
+# Keep sudo session alive by updating the timestamp every 5 minutes
+while true; do
+    sudo -n true
+    sleep 300
+    kill -0 "$$" || exit
+done 2>/dev/null &
 
 # ===== Parse command line options =====
-while getopts "s:a:f:t:i:" opt; do
+while getopts "s:f:t:h" opt; do
   case ${opt} in
     s ) SESSION="$OPTARG" ;;
-    a ) GESTATIONAL_AGE="$OPTARG" ;;
     f ) INPUT_FILE="$OPTARG" ;;
     t ) TRANSFORM_FILE="$OPTARG" ;;
-    i ) SUBJECT_ID="$OPTARG" ;;
-    \? ) echo "Usage: $0 [-s session] [-a gest_age] [-f input_file] [-t transform_file] [-i subject_id]"
+    h ) echo "Usage: $0 [-s session] [-f input_file] [-t transform_file]"
+        echo "  -s: Session ID (default: s1)"
+        echo "  -f: Input NIfTI file (default: srr.nii.gz)"
+        echo "  -t: Transform file (default: Untitled.txt)"
+        echo "  -h: Show this help message"
+        echo ""
+        echo "Note: Subject ID and Gestational Age will be prompted during execution"
+        exit 0 ;;
+    \? ) echo "Usage: $0 [-s session] [-f input_file] [-t transform_file] [-h]"
+         echo "Use -h for detailed help"
          exit 1 ;;
   esac
 done
 
+# ===== Prompt for required parameters =====
+echo "=== Required Parameters ==="
+echo
+
+# Prompt for Subject ID
+while [[ -z "$SUBJECT_ID" ]]; do
+    read -p "Enter Subject ID: " SUBJECT_ID
+    if [[ -z "$SUBJECT_ID" ]]; then
+        echo "Error: Subject ID cannot be empty. Please try again."
+    fi
+done
+
+# Prompt for Gestational Age with validation
+while [[ -z "$GESTATIONAL_AGE" ]] || ! [[ "$GESTATIONAL_AGE" =~ ^[0-9]+$ ]] || [[ "$GESTATIONAL_AGE" -lt 20 ]] || [[ "$GESTATIONAL_AGE" -gt 45 ]]; do
+    read -p "Enter Gestational Age (weeks, typically 20-45): " GESTATIONAL_AGE
+    if [[ -z "$GESTATIONAL_AGE" ]]; then
+        echo "Error: Gestational age cannot be empty. Please try again."
+    elif ! [[ "$GESTATIONAL_AGE" =~ ^[0-9]+$ ]]; then
+        echo "Error: Gestational age must be a number. Please try again."
+    elif [[ "$GESTATIONAL_AGE" -lt 20 ]] || [[ "$GESTATIONAL_AGE" -gt 45 ]]; then
+        echo "Error: Gestational age should be between 20-45 weeks. Please try again."
+    fi
+done
+
+echo
 echo "=== Combined C3D + ANTs + NSOL + dHCP Processing ==="
 echo "Current directory: $CURRENT_DIR"
 echo "Session: $SESSION"
@@ -219,4 +265,3 @@ echo "  - T2 Input: $DECONV_FILE"
 echo "  - Threads: 8"
 echo
 echo "Final results: Check dHCP output directories for processed structural data"
-
