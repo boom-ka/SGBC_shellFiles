@@ -25,40 +25,40 @@ echo "Processing ${DATASET_ID}_pial_minus_white.nii.gz..."
 python3.10 -c "
 import ants
 img = ants.image_read('${DATASET_ID}_pial_minus_white.nii.gz')
-img_asl = img.reorient_image2('ASL')
-img_asl.image_write('${DATASET_ID}_pial_minus_white_ASL.nii.gz')
+img_RAI = img.reorient_image2('RAI')
+img_RAI.image_write('${DATASET_ID}_pial_minus_white_RAI.nii.gz')
 "
 
 echo "Processing ${DATASET_ID}_combined_white.nii.gz..."
 python3.10 -c "
 import ants
 img = ants.image_read('${DATASET_ID}_combined_white.nii.gz')
-img_asl = img.reorient_image2('ASL')
-img_asl.image_write('${DATASET_ID}_combined_white_ASL.nii.gz')
+img_RAI = img.reorient_image2('RAI')
+img_RAI.image_write('${DATASET_ID}_combined_white_RAI.nii.gz')
 "
 
 echo "Processing ${DATASET_ID}_L_pial.nii.gz..."
 python3.10 -c "
 import ants
 img = ants.image_read('${DATASET_ID}_L_pial.nii.gz')
-img_asl = img.reorient_image2('ASL')
-img_asl.image_write('${DATASET_ID}_L_pial_ASL.nii.gz')
+img_RAI = img.reorient_image2('RAI')
+img_RAI.image_write('${DATASET_ID}_L_pial_RAI.nii.gz')
 "
 
 echo "Processing ${DATASET_ID}_R_pial.nii.gz..."
 python3.10 -c "
 import ants
 img = ants.image_read('${DATASET_ID}_R_pial.nii.gz')
-img_asl = img.reorient_image2('ASL')
-img_asl.image_write('${DATASET_ID}_R_pial_ASL.nii.gz')
+img_RAI = img.reorient_image2('RAI')
+img_RAI.image_write('${DATASET_ID}_R_pial_RAI.nii.gz')
 "
 
 echo "Processing ${DATASET_ID}.nii.gz..."
 python3.10 -c "
 import ants
 img = ants.image_read('${DATASET_ID}.nii.gz')
-img_asl = img.reorient_image2('ASL')
-img_asl.image_write('${DATASET_ID}_ASL.nii.gz')
+img_RAI = img.reorient_image2('RAI')
+img_RAI.image_write('${DATASET_ID}_RAI.nii.gz')
 "
 
 echo "All processing complete!"
@@ -71,19 +71,21 @@ BASE_DATASET_ID=$(echo ${DATASET_ID} | sed 's/-s1$//')
 
 # Define variables for seal processing (use absolute path to ksi folder)
 data_folder="/home/htic/VedantSingh/${BASE_DATASET_ID}/ksi"
-results_folder="/home/htic/VedantSingh/ksi3/KSI-India/KSI-India-main/output"
+results_folder="/home/htic/VedantSingh/ksi3/KSI-India/KSI-India-main/output_RAI/${DATASET_ID}/${BASE_DATASET_ID}"
 subj="${DATASET_ID}"
 brain="srr_deconvoluted.nii.gz"
-extract_brain="${DATASET_ID}_ASL.nii.gz"
-rh_mask="${DATASET_ID}_R_pial_ASL.nii.gz"
-lh_mask="${DATASET_ID}_L_pial_ASL.nii.gz"
-pial_file="${DATASET_ID}_pial_minus_white_ASL.nii.gz"
-wm_file="${DATASET_ID}_combined_white_ASL.nii.gz"
+extract_brain="${DATASET_ID}_RAI.nii.gz"
+rh_mask="${DATASET_ID}_R_pial_RAI.nii.gz"
+lh_mask="${DATASET_ID}_L_pial_RAI.nii.gz"
+pial_file="${DATASET_ID}_pial_minus_white_RAI.nii.gz"
+wm_file="${DATASET_ID}_combined_white_RAI.nii.gz"
 
 # Run the freesurfer_surface command
 echo "Running KSI surface analysis..."
 echo "Data folder: ${data_folder}"
 echo "Subject: ${subj}"
+
+echo "
 ./bin/freesurfer_surface.sh -s "${subj}" \
                         -i "${data_folder}/${extract_brain}" \
                         -m "${data_folder}/${full_label_mask}" \
@@ -92,5 +94,14 @@ echo "Subject: ${subj}"
                         -P "${data_folder}/${pial_file}" \
                         -W "${data_folder}/${wm_file}" \
                         -o "${results_folder}"
+"
 
+./bin/freesurfer_surface.sh -s "${subj}" \
+                        -i "${data_folder}/${extract_brain}" \
+                        -m "${data_folder}/${full_label_mask}" \
+                        -R "${data_folder}/${rh_mask}" \
+                        -L "${data_folder}/${lh_mask}" \
+                        -P "${data_folder}/${pial_file}" \
+                        -W "${data_folder}/${wm_file}" \
+                        -o "${results_folder}"
 echo "KSI processing complete!"
